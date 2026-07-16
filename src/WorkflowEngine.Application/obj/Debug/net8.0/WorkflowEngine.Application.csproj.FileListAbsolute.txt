@@ -1,0 +1,17 @@
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\bin\Debug\net8.0\WorkflowEngine.Application.deps.json
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\bin\Debug\net8.0\WorkflowEngine.Application.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\bin\Debug\net8.0\WorkflowEngine.Application.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\bin\Debug\net8.0\WorkflowEngine.Domain.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\bin\Debug\net8.0\WorkflowEngine.Infrastructure.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\bin\Debug\net8.0\WorkflowEngine.Domain.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\bin\Debug\net8.0\WorkflowEngine.Infrastructure.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\WorkflowEngine.Application.csproj.AssemblyReference.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\WorkflowEngine.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\WorkflowEngine.Application.AssemblyInfoInputs.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\WorkflowEngine.Application.AssemblyInfo.cs
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\WorkflowEngine.Application.csproj.CoreCompileInputs.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\Workflow.C754BA65.Up2Date
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\WorkflowEngine.Application.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\refint\WorkflowEngine.Application.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\WorkflowEngine.Application.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Application\obj\Debug\net8.0\ref\WorkflowEngine.Application.dll

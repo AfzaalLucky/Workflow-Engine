@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.*" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WorkflowEngine.Application\WorkflowEngine.Application.csproj" />
+    <ProjectReference Include="..\WorkflowEngine.Infrastructure\WorkflowEngine.Infrastructure.csproj" />
+    <ProjectReference Include="..\WorkflowEngine.Domain\WorkflowEngine.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

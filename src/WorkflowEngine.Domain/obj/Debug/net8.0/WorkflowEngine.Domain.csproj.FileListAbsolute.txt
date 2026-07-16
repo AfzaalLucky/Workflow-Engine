@@ -1,0 +1,11 @@
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\bin\Debug\net8.0\WorkflowEngine.Domain.deps.json
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\bin\Debug\net8.0\WorkflowEngine.Domain.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\bin\Debug\net8.0\WorkflowEngine.Domain.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\WorkflowEngine.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\WorkflowEngine.Domain.AssemblyInfoInputs.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\WorkflowEngine.Domain.AssemblyInfo.cs
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\WorkflowEngine.Domain.csproj.CoreCompileInputs.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\WorkflowEngine.Domain.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\refint\WorkflowEngine.Domain.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\WorkflowEngine.Domain.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Domain\obj\Debug\net8.0\ref\WorkflowEngine.Domain.dll

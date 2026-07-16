@@ -1,0 +1,15 @@
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\WorkflowEngine.Infrastructure.csproj.AssemblyReference.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\WorkflowEngine.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\WorkflowEngine.Infrastructure.AssemblyInfoInputs.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\WorkflowEngine.Infrastructure.AssemblyInfo.cs
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\WorkflowEngine.Infrastructure.csproj.CoreCompileInputs.cache
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\bin\Debug\net8.0\WorkflowEngine.Infrastructure.deps.json
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\bin\Debug\net8.0\WorkflowEngine.Infrastructure.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\bin\Debug\net8.0\WorkflowEngine.Infrastructure.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\bin\Debug\net8.0\WorkflowEngine.Domain.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\bin\Debug\net8.0\WorkflowEngine.Domain.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\Workflow.C92F5749.Up2Date
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\WorkflowEngine.Infrastructure.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\refint\WorkflowEngine.Infrastructure.dll
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\WorkflowEngine.Infrastructure.pdb
+D:\ProjecTs\lucKY\AiProjeTs\MSSQL\src\WorkflowEngine.Infrastructure\obj\Debug\net8.0\ref\WorkflowEngine.Infrastructure.dll
