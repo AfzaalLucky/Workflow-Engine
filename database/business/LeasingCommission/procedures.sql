@@ -37,7 +37,7 @@ BEGIN
 
     SELECT
         lc.LeasingCommissionId, lc.WorkflowInstanceId, lc.RequestedByUserId, lc.LesseeName,
-        lc.CommissionAmount, lc.Branch, lc.Notes, lc.CreatedAt,
+        lc.CommissionAmount, lc.Branch, lc.Notes, lc.StatusCode, lc.CreatedAt,
         wi.Status AS WorkflowStatus, s.Name AS CurrentStageName
     FROM dbo.LeasingCommission lc
     LEFT JOIN dbo.wf_WorkflowInstance wi ON wi.WorkflowInstanceId = lc.WorkflowInstanceId
@@ -54,12 +54,24 @@ BEGIN
 
     SELECT
         lc.LeasingCommissionId, lc.WorkflowInstanceId, lc.RequestedByUserId, lc.LesseeName,
-        lc.CommissionAmount, lc.Branch, lc.Notes, lc.CreatedAt,
+        lc.CommissionAmount, lc.Branch, lc.Notes, lc.StatusCode, lc.CreatedAt,
         wi.Status AS WorkflowStatus, s.Name AS CurrentStageName
     FROM dbo.LeasingCommission lc
     LEFT JOIN dbo.wf_WorkflowInstance wi ON wi.WorkflowInstanceId = lc.WorkflowInstanceId
     LEFT JOIN dbo.wf_Stage s ON s.StageId = wi.CurrentStageId
     WHERE lc.RequestedByUserId = @RequestedByUserId
     ORDER BY lc.CreatedAt DESC;
+END
+GO
+
+-- Called by the status-sync event handler: mirrors the engine's
+-- ExternalStatusCode for the stage the record just moved to.
+CREATE OR ALTER PROCEDURE dbo.lc_SetStatusCode
+    @LeasingCommissionId INT,
+    @StatusCode          VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.LeasingCommission SET StatusCode = @StatusCode WHERE LeasingCommissionId = @LeasingCommissionId;
 END
 GO

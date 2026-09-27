@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../../api/apiClient";
-import type { ReturnRule, Stage } from "../../api/types";
+import type { ResumeMode, ReturnRule, Stage } from "../../api/types";
 
 export function ReturnRulesEditor({
   workflowVersionId,
@@ -17,6 +17,7 @@ export function ReturnRulesEditor({
   const [toStageId, setToStageId] = useState("");
   const [resetApprovalsOnReturn, setResetApprovalsOnReturn] = useState(true);
   const [requireComment, setRequireComment] = useState(true);
+  const [resumeMode, setResumeMode] = useState<ResumeMode>("Forward");
 
   const stageName = (id: number) => stages.find((s) => s.stageId === id)?.name ?? id;
 
@@ -27,6 +28,7 @@ export function ReturnRulesEditor({
         toStageId: Number(toStageId),
         resetApprovalsOnReturn,
         requireComment,
+        resumeMode,
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["adminVersionDetail", workflowVersionId] }),
   });
@@ -41,6 +43,7 @@ export function ReturnRulesEditor({
             <th>To</th>
             <th>Reset Approvals</th>
             <th>Require Comment</th>
+            <th>After Rework</th>
           </tr>
         </thead>
         <tbody>
@@ -50,6 +53,7 @@ export function ReturnRulesEditor({
               <td>{r.toStageName ?? stageName(r.toStageId)}</td>
               <td>{r.resetApprovalsOnReturn ? "Yes" : "No"}</td>
               <td>{r.requireComment ? "Yes" : "No"}</td>
+              <td>{r.resumeMode === "ReturnToOrigin" ? "Back to returning stage" : "Follow transitions"}</td>
             </tr>
           ))}
         </tbody>
@@ -82,6 +86,13 @@ export function ReturnRulesEditor({
                 {s.name}
               </option>
             ))}
+          </select>
+        </label>
+        <label>
+          After Rework
+          <select value={resumeMode} onChange={(e) => setResumeMode(e.target.value as ResumeMode)}>
+            <option value="Forward">Follow transitions</option>
+            <option value="ReturnToOrigin">Back to returning stage</option>
           </select>
         </label>
         <label style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

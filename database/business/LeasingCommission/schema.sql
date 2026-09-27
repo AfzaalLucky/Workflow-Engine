@@ -14,6 +14,7 @@ CREATE TABLE dbo.LeasingCommission (
     CommissionAmount    DECIMAL(18,2)    NOT NULL,
     Branch              NVARCHAR(100)    NOT NULL,
     Notes               NVARCHAR(MAX)    NULL,
+    StatusCode          VARCHAR(50)      NULL, -- mirrored from wf_Stage.ExternalStatusCode by the status-sync event handler
     CreatedAt           DATETIME2(3)     NOT NULL CONSTRAINT DF_LeasingCommission_CreatedAt DEFAULT (SYSUTCDATETIME()),
     CONSTRAINT PK_LeasingCommission PRIMARY KEY CLUSTERED (LeasingCommissionId),
     CONSTRAINT FK_LeasingCommission_WorkflowInstance FOREIGN KEY (WorkflowInstanceId)

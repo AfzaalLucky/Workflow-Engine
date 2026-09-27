@@ -22,6 +22,7 @@ export function StagesEditor({
   const [parallelGroupId, setParallelGroupId] = useState("");
   const [isInitial, setIsInitial] = useState(false);
   const [isFinal, setIsFinal] = useState(false);
+  const [externalStatusCode, setExternalStatusCode] = useState("");
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -33,11 +34,13 @@ export function StagesEditor({
         parallelGroupId: parallelGroupId ? Number(parallelGroupId) : null,
         isInitial,
         isFinal,
+        externalStatusCode: externalStatusCode || null,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminVersionDetail", workflowVersionId] });
       setStageKey("");
       setName("");
+      setExternalStatusCode("");
     },
   });
 
@@ -54,6 +57,7 @@ export function StagesEditor({
             <th>Parallel Group</th>
             <th>Initial</th>
             <th>Final</th>
+            <th>External Status</th>
           </tr>
         </thead>
         <tbody>
@@ -66,6 +70,7 @@ export function StagesEditor({
               <td>{parallelGroups.find((g) => g.parallelGroupId === stage.parallelGroupId)?.name ?? ""}</td>
               <td>{stage.isInitial ? "Yes" : ""}</td>
               <td>{stage.isFinal ? "Yes" : ""}</td>
+              <td>{stage.externalStatusCode ?? ""}</td>
             </tr>
           ))}
         </tbody>
@@ -110,6 +115,10 @@ export function StagesEditor({
               </option>
             ))}
           </select>
+        </label>
+        <label title="Your application's own status for this stage (e.g. a StatusID). Sent on lifecycle events.">
+          External Status Code
+          <input value={externalStatusCode} onChange={(e) => setExternalStatusCode(e.target.value)} />
         </label>
         <label style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <input type="checkbox" checked={isInitial} onChange={(e) => setIsInitial(e.target.checked)} /> Initial

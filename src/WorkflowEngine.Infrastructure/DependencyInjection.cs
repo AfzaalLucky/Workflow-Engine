@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddScoped<IWorkflowRuntimeRepository, WorkflowRuntimeRepository>();
         services.AddScoped<IWorkflowMetadataRepository, WorkflowMetadataRepository>();
+        services.AddScoped<IWorkflowEventRepository, WorkflowEventRepository>();
 
         return services;
     }

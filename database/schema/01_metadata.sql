@@ -61,6 +61,7 @@ CREATE TABLE dbo.wf_Stage (
     ParallelGroupId       INT           NULL, -- set when this stage is a branch inside a parallel group
     IsInitial             BIT           NOT NULL CONSTRAINT DF_wf_Stage_IsInitial DEFAULT (0),
     IsFinal               BIT           NOT NULL CONSTRAINT DF_wf_Stage_IsFinal DEFAULT (0),
+    ExternalStatusCode    VARCHAR(50)   NULL, -- host app's own status for this stage (e.g. LeasingCommission.StatusID "20"); carried on lifecycle events
     CONSTRAINT PK_wf_Stage PRIMARY KEY CLUSTERED (StageId),
     CONSTRAINT UQ_wf_Stage_VersionKey UNIQUE (WorkflowVersionId, StageKey),
     CONSTRAINT FK_wf_Stage_Version FOREIGN KEY (WorkflowVersionId)
@@ -135,15 +136,20 @@ CREATE TABLE dbo.wf_ApprovalRule (
 );
 GO
 
--- RequiredCount=1 against a group means "any one of"; RequiredCount = member
--- count (resolved at task-creation time) means "all of".
+-- RequiredCount=1 against a group means "any one of"; RequiredCount=N (N>1)
+-- means "any N of" the group's explicit User members; N >= member count
+-- (resolved at task-creation time) means "all of".
 CREATE TABLE dbo.wf_ReturnRule (
     ReturnRuleId           INT IDENTITY(1,1) NOT NULL,
     FromStageId            INT NOT NULL,
     ToStageId              INT NOT NULL,
     ResetApprovalsOnReturn BIT NOT NULL CONSTRAINT DF_wf_ReturnRule_Reset DEFAULT (1),
     RequireComment         BIT NOT NULL CONSTRAINT DF_wf_ReturnRule_RequireComment DEFAULT (1),
+    -- Forward: once the return target is re-approved, follow its normal transitions.
+    -- ReturnToOrigin: jump straight back to the stage that issued the return.
+    ResumeMode             VARCHAR(20) NOT NULL CONSTRAINT DF_wf_ReturnRule_ResumeMode DEFAULT ('Forward'),
     CONSTRAINT PK_wf_ReturnRule PRIMARY KEY CLUSTERED (ReturnRuleId),
+    CONSTRAINT CK_wf_ReturnRule_ResumeMode CHECK (ResumeMode IN ('Forward','ReturnToOrigin')),
     CONSTRAINT FK_wf_ReturnRule_FromStage FOREIGN KEY (FromStageId) REFERENCES dbo.wf_Stage (StageId),
     CONSTRAINT FK_wf_ReturnRule_ToStage FOREIGN KEY (ToStageId) REFERENCES dbo.wf_Stage (StageId)
 );

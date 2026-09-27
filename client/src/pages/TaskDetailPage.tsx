@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
+import type { ActOnTaskResult } from "../api/types";
 
 function formatContext(contextDataJson: string | null): [string, unknown][] {
   if (!contextDataJson) return [];
@@ -27,8 +28,14 @@ export function TaskDetailPage() {
     queryFn: () => api.getTaskDetail(approvalTaskId),
   });
 
-  const afterAction = () => {
+  const afterAction = (result: ActOnTaskResult) => {
     queryClient.invalidateQueries({ queryKey: ["myTasks"] });
+    // Your action was recorded, but the engine couldn't route onward (a
+    // metadata problem) -- say so instead of silently leaving the page.
+    if (result.routingError) {
+      setActionError(`Your action was saved, but the workflow could not advance: ${result.routingError}. An administrator needs to fix the workflow and resume it.`);
+      return;
+    }
     navigate("/tasks");
   };
 

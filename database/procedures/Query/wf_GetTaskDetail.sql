@@ -18,7 +18,7 @@ BEGIN
 
     -- Legal return targets for this task's stage, so the UI can offer a
     -- "Return to..." choice when more than one applies.
-    SELECT rr.FromStageId, rr.ToStageId, s.Name AS ToStageName, rr.RequireComment
+    SELECT rr.FromStageId, rr.ToStageId, s.Name AS ToStageName, rr.RequireComment, rr.ResumeMode
     FROM dbo.wf_ApprovalTask t
     INNER JOIN dbo.wf_WorkflowInstanceStage wis ON wis.InstanceStageId = t.InstanceStageId
     INNER JOIN dbo.wf_ReturnRule rr ON rr.FromStageId = wis.StageId

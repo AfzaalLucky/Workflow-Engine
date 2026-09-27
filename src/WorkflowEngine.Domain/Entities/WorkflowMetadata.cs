@@ -32,6 +32,7 @@ public class Stage
     public int? ParallelGroupId { get; set; }
     public bool IsInitial { get; set; }
     public bool IsFinal { get; set; }
+    public string? ExternalStatusCode { get; set; }
 }
 
 public class ParallelGroup
@@ -92,6 +93,7 @@ public class ReturnRule
     public string? ToStageName { get; set; }
     public bool ResetApprovalsOnReturn { get; set; }
     public bool RequireComment { get; set; }
+    public string ResumeMode { get; set; } = "Forward";
 }
 
 public class WorkflowVersionDetail

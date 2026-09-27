@@ -42,7 +42,9 @@ BEGIN
             END
             ELSE
             BEGIN
-                -- All-of: one task per explicit user member. Role-based membership
+                -- N-of / all-of: one task per explicit user member; wf_ActOnTask
+                -- treats the rule as satisfied once RequiredCount of them approve
+                -- (or all, if RequiredCount >= member count). Role-based membership
                 -- can't be enumerated to specific users without a user directory,
                 -- so all-of groups must be composed of explicit User members.
                 INSERT INTO dbo.wf_ApprovalTask (InstanceStageId, WorkflowInstanceId, ApprovalRuleId, AssignedToUserId, AssignedToGroupId)

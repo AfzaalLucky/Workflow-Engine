@@ -8,6 +8,7 @@ BEGIN
         wi.WorkflowInstanceId, wi.Status, wi.BusinessEntityType, wi.BusinessEntityId,
         wi.ContextDataJson, wi.StartedByUserId, wi.StartedAt, wi.CompletedAt,
         cs.StageId AS CurrentStageId, cs.StageKey AS CurrentStageKey, cs.Name AS CurrentStageName,
+        cs.ExternalStatusCode AS CurrentExternalStatusCode, wi.WorkflowVersionId,
         d.Code AS WorkflowDefinitionCode, d.Name AS WorkflowDefinitionName, v.VersionNumber
     FROM dbo.wf_WorkflowInstance wi
     LEFT JOIN dbo.wf_Stage cs ON cs.StageId = wi.CurrentStageId

@@ -18,8 +18,11 @@ public class WorkflowInstanceService(
         // The initial (Start) stage never carries approval rules -- immediately
         // resolve and take its outgoing transition so the instance lands on
         // the first real approval stage.
-        var nextStageId = await routingService.ResolveNextStageAsync(started.InitialStageId, request.ContextDataJson);
-        await runtimeRepository.AdvanceToStageAsync(started.WorkflowInstanceId, nextStageId, startedByUserId);
+        var routingError = await routingService.RouteAndAdvanceAsync(
+            started.WorkflowInstanceId, started.InitialStageId, null, request.ContextDataJson, startedByUserId);
+        if (routingError is not null)
+            throw new InvalidOperationException(
+                $"Workflow instance {started.WorkflowInstanceId} was created but is Errored: {routingError}");
 
         return started.WorkflowInstanceId;
     }
@@ -29,6 +32,11 @@ public class WorkflowInstanceService(
 
     public Task<IReadOnlyList<ApprovalActionEntry>> GetInstanceHistoryAsync(Guid workflowInstanceId) =>
         runtimeRepository.GetWorkflowInstanceHistoryAsync(workflowInstanceId);
+
+    public Task<IReadOnlyList<WorkflowInstance>> FindInstancesAsync(WorkflowInstanceQuery query, Guid currentUserId) =>
+        runtimeRepository.GetWorkflowInstancesAsync(
+            query.BusinessEntityType, query.BusinessEntityId, query.WorkflowDefinitionCode,
+            query.Mine ? currentUserId : null, query.Status, Math.Clamp(query.Top, 1, 1000));
 
     public async Task ResumeInstanceAsync(Guid workflowInstanceId, ResumeWorkflowInstanceRequest request, Guid actorUserId)
     {
@@ -40,7 +48,9 @@ public class WorkflowInstanceService(
         var status = await runtimeRepository.GetWorkflowInstanceStatusAsync(workflowInstanceId)
             ?? throw new InvalidOperationException("Workflow instance not found after resume.");
 
-        var nextStageId = await routingService.ResolveNextStageAsync(resumed.CurrentStageId, status.Instance.ContextDataJson);
-        await runtimeRepository.AdvanceToStageAsync(workflowInstanceId, nextStageId, actorUserId);
+        var routingError = await routingService.RouteAndAdvanceAsync(
+            workflowInstanceId, resumed.CurrentStageId, resumed.ResumeToStageId, status.Instance.ContextDataJson, actorUserId);
+        if (routingError is not null)
+            throw new InvalidOperationException($"Workflow instance {workflowInstanceId} is Errored: {routingError}");
     }
 }

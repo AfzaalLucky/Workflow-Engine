@@ -7,6 +7,7 @@ CREATE OR ALTER PROCEDURE dbo.wf_UpsertStage
     @ParallelGroupId   INT = NULL,
     @IsInitial         BIT = 0,
     @IsFinal           BIT = 0,
+    @ExternalStatusCode VARCHAR(50) = NULL,
     @ActorUserId       UNIQUEIDENTIFIER,
     @StageId           INT OUTPUT
 AS
@@ -17,15 +18,16 @@ BEGIN
 
     IF @StageId IS NULL
     BEGIN
-        INSERT INTO dbo.wf_Stage (WorkflowVersionId, StageKey, Name, StageOrder, StageType, ParallelGroupId, IsInitial, IsFinal)
-        VALUES (@WorkflowVersionId, @StageKey, @Name, @StageOrder, @StageType, @ParallelGroupId, @IsInitial, @IsFinal);
+        INSERT INTO dbo.wf_Stage (WorkflowVersionId, StageKey, Name, StageOrder, StageType, ParallelGroupId, IsInitial, IsFinal, ExternalStatusCode)
+        VALUES (@WorkflowVersionId, @StageKey, @Name, @StageOrder, @StageType, @ParallelGroupId, @IsInitial, @IsFinal, @ExternalStatusCode);
         SET @StageId = SCOPE_IDENTITY();
     END
     ELSE
     BEGIN
         UPDATE dbo.wf_Stage
         SET Name = @Name, StageOrder = @StageOrder, StageType = @StageType,
-            ParallelGroupId = @ParallelGroupId, IsInitial = @IsInitial, IsFinal = @IsFinal
+            ParallelGroupId = @ParallelGroupId, IsInitial = @IsInitial, IsFinal = @IsFinal,
+            ExternalStatusCode = @ExternalStatusCode
         WHERE StageId = @StageId;
     END
 

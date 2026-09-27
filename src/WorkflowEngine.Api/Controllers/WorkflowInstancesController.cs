@@ -20,6 +20,17 @@ public class WorkflowInstancesController(
         return CreatedAtAction(nameof(GetStatus), new { workflowInstanceId = instanceId }, new { workflowInstanceId = instanceId });
     }
 
+    // Generic lookup for any host app, e.g.
+    //   GET /api/workflow-instances?businessEntityType=Invoice&businessEntityId=42
+    //   GET /api/workflow-instances?mine=true
+    //   GET /api/workflow-instances?status=Errored   (admin recovery queue)
+    [HttpGet]
+    public async Task<IActionResult> Find([FromQuery] WorkflowInstanceQuery query)
+    {
+        var instances = await instanceService.FindInstancesAsync(query, currentUser.UserId);
+        return Ok(instances);
+    }
+
     [HttpGet("{workflowInstanceId:guid}")]
     public async Task<IActionResult> GetStatus(Guid workflowInstanceId)
     {

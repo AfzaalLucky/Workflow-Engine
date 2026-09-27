@@ -37,6 +37,26 @@ public class WorkflowRoutingService(IWorkflowRuntimeRepository runtimeRepository
             $"No transition condition matched and no default transition is configured from stage {fromStageId}.");
     }
 
+    public async Task<string?> RouteAndAdvanceAsync(
+        Guid workflowInstanceId, int fromStageId, int? resumeToStageId, string? contextDataJson, Guid actorUserId)
+    {
+        // The stage's own transaction has already committed by the time we get
+        // here, so a failure must not leave the instance InProgress with no
+        // active stage and no tasks -- it becomes Errored instead.
+        try
+        {
+            var nextStageId = resumeToStageId ?? await ResolveNextStageAsync(fromStageId, contextDataJson);
+            await runtimeRepository.AdvanceToStageAsync(workflowInstanceId, nextStageId, actorUserId);
+            return null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var message = $"Routing from stage {fromStageId} failed: {ex.Message}";
+            await runtimeRepository.MarkInstanceErroredAsync(workflowInstanceId, actorUserId, message);
+            return message;
+        }
+    }
+
     private static Dictionary<string, object> ParseContext(string? contextDataJson)
     {
         var result = new Dictionary<string, object>();

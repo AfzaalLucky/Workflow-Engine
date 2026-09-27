@@ -162,3 +162,5 @@ SELECT
     @FinanceStageId AS FinanceStageId, @ParallelContainerStageId AS ParallelContainerStageId,
     @LegalStageId AS LegalStageId, @ProcurementStageId AS ProcurementStageId,
     @FinalStageId AS FinalStageId, @EndStageId AS EndStageId;
+
+GO

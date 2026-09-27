@@ -15,6 +15,7 @@ import type {
   TaskDetailResult,
   Transition,
   WorkflowDefinition,
+  WorkflowInstance,
   WorkflowVersionDetail,
 } from "./types";
 
@@ -68,6 +69,17 @@ export const api = {
       body: JSON.stringify({ comments, returnToStageId }),
     }),
 
+  findInstances: (query: {
+    businessEntityType?: string;
+    businessEntityId?: string;
+    workflowDefinitionCode?: string;
+    status?: string;
+    mine?: boolean;
+  }) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) if (value !== undefined && value !== "") params.set(key, String(value));
+    return request<WorkflowInstance[]>(`/workflow-instances?${params}`);
+  },
   getInstanceStatus: (instanceId: string) => request<InstanceStatusResult>(`/workflow-instances/${instanceId}`),
   getInstanceHistory: (instanceId: string) =>
     request<ApprovalActionEntry[]>(`/workflow-instances/${instanceId}/history`),

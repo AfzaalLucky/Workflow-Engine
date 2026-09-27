@@ -29,6 +29,14 @@ public class LeasingCommissionRepository(ISqlConnectionFactory connectionFactory
             commandType: CommandType.StoredProcedure);
     }
 
+    public async Task SetStatusCodeAsync(int leasingCommissionId, string statusCode)
+    {
+        using var connection = connectionFactory.CreateOpenConnection();
+        await connection.ExecuteAsync("dbo.lc_SetStatusCode",
+            new { LeasingCommissionId = leasingCommissionId, StatusCode = statusCode },
+            commandType: CommandType.StoredProcedure);
+    }
+
     public async Task<LeasingCommission?> GetAsync(int leasingCommissionId)
     {
         using var connection = connectionFactory.CreateOpenConnection();

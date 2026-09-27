@@ -59,3 +59,20 @@ public static class TaskActions
     public const string Reject = "Reject";
     public const string Return = "Return";
 }
+
+public static class ResumeModes
+{
+    public const string Forward = "Forward";
+    public const string ReturnToOrigin = "ReturnToOrigin";
+}
+
+public static class WorkflowEventTypes
+{
+    public const string InstanceStarted = "InstanceStarted";
+    public const string StageEntered = "StageEntered";
+    public const string InstanceApproved = "InstanceApproved";
+    public const string InstanceRejected = "InstanceRejected";
+    public const string InstanceReturned = "InstanceReturned";
+    public const string InstanceResumed = "InstanceResumed";
+    public const string InstanceErrored = "InstanceErrored";
+}

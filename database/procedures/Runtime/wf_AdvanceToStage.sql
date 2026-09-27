@@ -82,6 +82,15 @@ BEGIN
     -- StageType = 'Start' needs no tasks; it is only re-entered via
     -- wf_ActOnTask's Return branch, which inserts its own stage visit directly.
 
+    -- A parallel fan-out raises one StageEntered for the container only;
+    -- branch stages are an internal detail of the gate.
+    IF @StageType = 'End'
+        EXEC dbo.wf_EnqueueEvent @WorkflowInstanceId = @WorkflowInstanceId, @EventType = 'InstanceApproved',
+            @ActorUserId = @ActorUserId, @StageId = @ToStageId;
+    ELSE
+        EXEC dbo.wf_EnqueueEvent @WorkflowInstanceId = @WorkflowInstanceId, @EventType = 'StageEntered',
+            @ActorUserId = @ActorUserId, @StageId = @ToStageId;
+
     COMMIT TRAN;
 END
 GO

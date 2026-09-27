@@ -73,7 +73,7 @@ public class WorkflowMetadataRepository(ISqlConnectionFactory connectionFactory)
     }
 
     public async Task<int> UpsertStageAsync(int workflowVersionId, string stageKey, string name, int stageOrder,
-        string stageType, int? parallelGroupId, bool isInitial, bool isFinal, Guid actorUserId)
+        string stageType, int? parallelGroupId, bool isInitial, bool isFinal, string? externalStatusCode, Guid actorUserId)
     {
         using var connection = connectionFactory.CreateOpenConnection();
         var parameters = new DynamicParameters();
@@ -85,6 +85,7 @@ public class WorkflowMetadataRepository(ISqlConnectionFactory connectionFactory)
         parameters.Add("ParallelGroupId", parallelGroupId);
         parameters.Add("IsInitial", isInitial);
         parameters.Add("IsFinal", isFinal);
+        parameters.Add("ExternalStatusCode", externalStatusCode);
         parameters.Add("ActorUserId", actorUserId);
         parameters.Add("StageId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
@@ -179,7 +180,7 @@ public class WorkflowMetadataRepository(ISqlConnectionFactory connectionFactory)
     }
 
     public async Task<int> UpsertReturnRuleAsync(int? returnRuleId, int fromStageId, int toStageId,
-        bool resetApprovalsOnReturn, bool requireComment, Guid actorUserId)
+        bool resetApprovalsOnReturn, bool requireComment, string resumeMode, Guid actorUserId)
     {
         using var connection = connectionFactory.CreateOpenConnection();
         var parameters = new DynamicParameters();
@@ -188,6 +189,7 @@ public class WorkflowMetadataRepository(ISqlConnectionFactory connectionFactory)
         parameters.Add("ToStageId", toStageId);
         parameters.Add("ResetApprovalsOnReturn", resetApprovalsOnReturn);
         parameters.Add("RequireComment", requireComment);
+        parameters.Add("ResumeMode", resumeMode);
         parameters.Add("ActorUserId", actorUserId);
         parameters.Add("ResultReturnRuleId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 

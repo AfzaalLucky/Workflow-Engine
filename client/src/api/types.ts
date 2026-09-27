@@ -39,6 +39,7 @@ export interface ReturnOption {
   toStageId: number;
   toStageName: string;
   requireComment: boolean;
+  resumeMode: ResumeMode;
 }
 
 export interface TaskDetailResult {
@@ -50,6 +51,10 @@ export interface ActOnTaskResult {
   workflowInstanceId: string;
   needsRouting: boolean;
   routingFromStageId: number | null;
+  resumeToStageId: number | null;
+  // Set when the action committed but routing onward failed -- the
+  // instance is now Errored and can be recovered via resume.
+  routingError: string | null;
 }
 
 export interface WorkflowInstance {
@@ -60,6 +65,7 @@ export interface WorkflowInstance {
   currentStageId: number | null;
   currentStageKey: string | null;
   currentStageName: string | null;
+  currentExternalStatusCode: string | null;
   status: string;
   contextDataJson: string | null;
   startedByUserId: string;
@@ -154,6 +160,7 @@ export interface Stage {
   parallelGroupId: number | null;
   isInitial: boolean;
   isFinal: boolean;
+  externalStatusCode: string | null;
 }
 
 export interface Transition {
@@ -192,7 +199,10 @@ export interface ReturnRule {
   toStageName: string | null;
   resetApprovalsOnReturn: boolean;
   requireComment: boolean;
+  resumeMode: ResumeMode;
 }
+
+export type ResumeMode = "Forward" | "ReturnToOrigin";
 
 export interface ApprovalGroup {
   approvalGroupId: number;

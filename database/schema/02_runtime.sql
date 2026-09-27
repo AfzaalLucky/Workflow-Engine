@@ -38,6 +38,7 @@ CREATE TABLE dbo.wf_WorkflowInstanceStage (
     ParallelGroupId       INT              NULL,
     Status                VARCHAR(20)      NOT NULL CONSTRAINT DF_wf_WorkflowInstanceStage_Status DEFAULT ('Pending'),
     AttemptNumber         INT              NOT NULL CONSTRAINT DF_wf_WorkflowInstanceStage_Attempt DEFAULT (1),
+    ReturnedFromStageId   INT              NULL, -- set on a return-target visit whose rule is ReturnToOrigin
     EnteredAt             DATETIME2(3)     NOT NULL CONSTRAINT DF_wf_WorkflowInstanceStage_EnteredAt DEFAULT (SYSUTCDATETIME()),
     ExitedAt              DATETIME2(3)     NULL,
     CONSTRAINT PK_wf_WorkflowInstanceStage PRIMARY KEY CLUSTERED (InstanceStageId),
@@ -46,6 +47,8 @@ CREATE TABLE dbo.wf_WorkflowInstanceStage (
     CONSTRAINT FK_wf_WorkflowInstanceStage_Stage FOREIGN KEY (StageId) REFERENCES dbo.wf_Stage (StageId),
     CONSTRAINT FK_wf_WorkflowInstanceStage_ParallelGroup FOREIGN KEY (ParallelGroupId)
         REFERENCES dbo.wf_ParallelGroup (ParallelGroupId),
+    CONSTRAINT FK_wf_WorkflowInstanceStage_ReturnedFrom FOREIGN KEY (ReturnedFromStageId)
+        REFERENCES dbo.wf_Stage (StageId),
     CONSTRAINT CK_wf_WorkflowInstanceStage_Status CHECK (
         Status IN ('Pending','Active','Approved','Rejected','Returned','Skipped','Superseded','Cancelled')
     )
@@ -101,7 +104,7 @@ CREATE TABLE dbo.wf_ApprovalAction (
     CONSTRAINT FK_wf_ApprovalAction_OldStage FOREIGN KEY (OldStageId) REFERENCES dbo.wf_Stage (StageId),
     CONSTRAINT FK_wf_ApprovalAction_NewStage FOREIGN KEY (NewStageId) REFERENCES dbo.wf_Stage (StageId),
     CONSTRAINT CK_wf_ApprovalAction_ActionType CHECK (
-        ActionType IN ('Submit','Approve','Reject','Return','Resume','SystemAdvance','Cancel')
+        ActionType IN ('Submit','Approve','Reject','Return','Resume','SystemAdvance','Cancel','Error')
     )
 );
 GO
@@ -118,6 +121,29 @@ CREATE TABLE dbo.wf_UserRef (
 );
 GO
 
+-- Transactional outbox of lifecycle events. Rows are written in the same
+-- transaction as the state change that caused them, then delivered
+-- asynchronously (in-process handlers, webhooks) by the API's dispatcher.
+-- This is how a host application learns about progress without the engine
+-- ever knowing about its tables.
+CREATE TABLE dbo.wf_WorkflowEvent (
+    EventId               BIGINT IDENTITY(1,1) NOT NULL,
+    WorkflowInstanceId    UNIQUEIDENTIFIER NOT NULL,
+    EventType             VARCHAR(50)      NOT NULL,
+    PayloadJson           NVARCHAR(MAX)    NOT NULL,
+    Status                VARCHAR(20)      NOT NULL CONSTRAINT DF_wf_WorkflowEvent_Status DEFAULT ('Pending'),
+    AttemptCount          INT              NOT NULL CONSTRAINT DF_wf_WorkflowEvent_AttemptCount DEFAULT (0),
+    NextAttemptAt         DATETIME2(3)     NOT NULL CONSTRAINT DF_wf_WorkflowEvent_NextAttemptAt DEFAULT (SYSUTCDATETIME()),
+    LastError             NVARCHAR(2000)   NULL,
+    CreatedAt             DATETIME2(3)     NOT NULL CONSTRAINT DF_wf_WorkflowEvent_CreatedAt DEFAULT (SYSUTCDATETIME()),
+    DeliveredAt           DATETIME2(3)     NULL,
+    CONSTRAINT PK_wf_WorkflowEvent PRIMARY KEY CLUSTERED (EventId),
+    CONSTRAINT FK_wf_WorkflowEvent_Instance FOREIGN KEY (WorkflowInstanceId)
+        REFERENCES dbo.wf_WorkflowInstance (WorkflowInstanceId),
+    CONSTRAINT CK_wf_WorkflowEvent_Status CHECK (Status IN ('Pending','Delivered','Failed'))
+);
+GO
+
 CREATE NONCLUSTERED INDEX IX_wf_WorkflowInstance_BusinessEntity ON dbo.wf_WorkflowInstance (BusinessEntityType, BusinessEntityId);
 CREATE NONCLUSTERED INDEX IX_wf_WorkflowInstance_Status ON dbo.wf_WorkflowInstance (Status);
 CREATE NONCLUSTERED INDEX IX_wf_WorkflowInstance_StartedBy ON dbo.wf_WorkflowInstance (StartedByUserId);
@@ -129,4 +155,6 @@ CREATE NONCLUSTERED INDEX IX_wf_ApprovalTask_Instance ON dbo.wf_ApprovalTask (Wo
 CREATE NONCLUSTERED INDEX IX_wf_ApprovalTask_InstanceStage ON dbo.wf_ApprovalTask (InstanceStageId);
 CREATE NONCLUSTERED INDEX IX_wf_ApprovalAction_Instance ON dbo.wf_ApprovalAction (WorkflowInstanceId, ActionAt);
 CREATE NONCLUSTERED INDEX IX_wf_ApprovalAction_InstanceStage ON dbo.wf_ApprovalAction (InstanceStageId);
+CREATE NONCLUSTERED INDEX IX_wf_WorkflowEvent_Pending ON dbo.wf_WorkflowEvent (Status, NextAttemptAt) INCLUDE (WorkflowInstanceId);
+CREATE NONCLUSTERED INDEX IX_wf_WorkflowEvent_Instance ON dbo.wf_WorkflowEvent (WorkflowInstanceId, Status, EventId);
 GO

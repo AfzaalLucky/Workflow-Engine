@@ -1,11 +1,13 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using WorkflowEngine.Api.Events;
 using WorkflowEngine.Api.Samples.LeasingCommissions;
 using WorkflowEngine.Api.Samples.PurchaseRequests;
 using WorkflowEngine.Api.Security;
 using WorkflowEngine.Application;
 using WorkflowEngine.Application.Abstractions;
+using WorkflowEngine.Application.Events;
 using WorkflowEngine.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,10 +68,19 @@ builder.Services.AddWorkflowApplication();
 builder.Services.AddScoped<IPurchaseRequestRepository, PurchaseRequestRepository>();
 builder.Services.AddScoped<ILeasingCommissionRepository, LeasingCommissionRepository>();
 
+// Lifecycle events: outbox dispatcher + delivery targets. Host applications
+// add their own reactions with AddWorkflowEventHandler<T>().
+builder.Services.Configure<WorkflowEventOptions>(builder.Configuration.GetSection("WorkflowEvents"));
+builder.Services.AddHttpClient(WebhookWorkflowEventHandler.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddWorkflowEventHandler<WebhookWorkflowEventHandler>();
+builder.Services.AddWorkflowEventHandler<LeasingCommissionStatusSyncHandler>();
+builder.Services.AddHostedService<WorkflowEventDispatcher>();
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:5183"];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WorkflowEngineClient", policy =>
-        policy.WithOrigins("http://localhost:5183")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod());
 });

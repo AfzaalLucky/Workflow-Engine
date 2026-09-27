@@ -9,6 +9,7 @@ public class WorkflowInstance
     public int? CurrentStageId { get; set; }
     public string? CurrentStageKey { get; set; }
     public string? CurrentStageName { get; set; }
+    public string? CurrentExternalStatusCode { get; set; }
     public string Status { get; set; } = "";
     public string? ContextDataJson { get; set; }
     public Guid StartedByUserId { get; set; }
@@ -75,6 +76,7 @@ public class ReturnOption
     public int ToStageId { get; set; }
     public string ToStageName { get; set; } = "";
     public bool RequireComment { get; set; }
+    public string ResumeMode { get; set; } = "";
 }
 
 public class TaskDetailResult
@@ -104,12 +106,28 @@ public class ActOnTaskResult
     public Guid WorkflowInstanceId { get; set; }
     public bool NeedsRouting { get; set; }
     public int? RoutingFromStageId { get; set; }
+    public int? ResumeToStageId { get; set; }
+
+    // Set when the task action committed but routing onward failed; the
+    // instance is then Errored and recoverable via resume.
+    public string? RoutingError { get; set; }
 }
 
 public class ResumeInstanceResult
 {
     public int CurrentStageId { get; set; }
     public bool NeedsRouting { get; set; }
+    public int? ResumeToStageId { get; set; }
+}
+
+// One claimed row from the wf_WorkflowEvent outbox.
+public class WorkflowEventRecord
+{
+    public long EventId { get; set; }
+    public Guid WorkflowInstanceId { get; set; }
+    public string EventType { get; set; } = "";
+    public string PayloadJson { get; set; } = "";
+    public int AttemptCount { get; set; }
 }
 
 public class StartInstanceResult

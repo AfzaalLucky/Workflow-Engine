@@ -165,9 +165,23 @@ IF NOT EXISTS (SELECT 1 FROM dbo.wf_ReturnRule WHERE FromStageId = @AuditStageId
     INSERT INTO dbo.wf_ReturnRule (FromStageId, ToStageId, ResetApprovalsOnReturn, RequireComment)
     VALUES (@AuditStageId, @ReturnFromAuditStageId, 0, 1);
 
+-- 7. Map each stage to the business table's own status ID (LeasingFlow.md).
+-- Lifecycle events carry this as ExternalStatusCode, so the host app can
+-- keep LeasingCommission.StatusID in sync without knowing about wf_* tables.
+UPDATE s SET ExternalStatusCode = m.Code
+FROM dbo.wf_Stage s
+INNER JOIN (VALUES
+    ('INITIATED', '1'), ('LEASING_APPROVAL', '20'), ('FINANCE_CC_GATE', '23'),
+    ('FINANCE_APPROVAL', '4'), ('CC_APPROVAL', '19'), ('AUDIT_APPROVAL', '5'),
+    ('RETURN_FROM_AUDIT', '14'), ('FINANCE_CLEARANCE', '6'), ('CLEARED', '7')
+) m (StageKey, Code) ON m.StageKey = s.StageKey
+WHERE s.WorkflowVersionId = @VerId;
+
 SELECT
     @DefId AS WorkflowDefinitionId, @VerId AS WorkflowVersionId, @ParallelGroupId AS ParallelGroupId,
     @InitiatedStageId AS InitiatedStageId, @LeasingApprovalStageId AS LeasingApprovalStageId,
     @GateStageId AS GateStageId, @FinanceStageId AS FinanceStageId, @CCStageId AS CCStageId,
     @AuditStageId AS AuditStageId, @ReturnFromAuditStageId AS ReturnFromAuditStageId,
     @FinanceClearanceStageId AS FinanceClearanceStageId, @ClearedStageId AS ClearedStageId;
+
+GO

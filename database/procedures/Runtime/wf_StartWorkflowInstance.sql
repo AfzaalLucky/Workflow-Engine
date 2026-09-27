@@ -41,6 +41,8 @@ BEGIN
     INSERT INTO dbo.wf_ApprovalAction (WorkflowInstanceId, InstanceStageId, ActionType, ActorUserId, NewStatus, NewStageId, ContextSnapshotJson)
     VALUES (@WorkflowInstanceId, @InstanceStageId, 'Submit', @StartedByUserId, 'InProgress', @InitialStageId, @ContextDataJson);
 
+    EXEC dbo.wf_EnqueueEvent @WorkflowInstanceId = @WorkflowInstanceId, @EventType = 'InstanceStarted', @ActorUserId = @StartedByUserId;
+
     -- The initial stage never carries approval rules, so no tasks are created
     -- here. Advancing past it (resolving routing via NCalc, then calling
     -- wf_AdvanceToStage) is the caller's responsibility.

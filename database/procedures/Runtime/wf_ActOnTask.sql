@@ -6,7 +6,10 @@
 -- On Approve, if the stage's approval rules are now fully satisfied, sets
 -- @NeedsRouting = 1 and @RoutingFromStageId so the caller can resolve the
 -- next stage (via wf_GetCandidateTransitions + NCalc) and call
--- wf_AdvanceToStage. This proc never decides routing itself.
+-- wf_AdvanceToStage. This proc never decides routing itself -- except
+-- when the satisfied stage was entered via a ReturnToOrigin return rule:
+-- then @ResumeToStageId names the stage that issued the return, and the
+-- caller advances there directly instead of evaluating transitions.
 CREATE OR ALTER PROCEDURE dbo.wf_ActOnTask
     @ApprovalTaskId      BIGINT,
     @ActorUserId         UNIQUEIDENTIFIER,
@@ -16,12 +19,14 @@ CREATE OR ALTER PROCEDURE dbo.wf_ActOnTask
     @ReturnToStageId     INT = NULL,
     @WorkflowInstanceId  UNIQUEIDENTIFIER OUTPUT,
     @NeedsRouting        BIT OUTPUT,
-    @RoutingFromStageId  INT OUTPUT
+    @RoutingFromStageId  INT OUTPUT,
+    @ResumeToStageId     INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET @NeedsRouting = 0;
     SET @RoutingFromStageId = NULL;
+    SET @ResumeToStageId = NULL;
 
     BEGIN TRAN;
 
@@ -64,25 +69,35 @@ BEGIN
         UPDATE dbo.wf_ApprovalTask SET Status = 'Rejected', CompletedByUserId = @ActorUserId, Comments = @Comments, CompletedAt = SYSUTCDATETIME()
         WHERE ApprovalTaskId = @ApprovalTaskId;
 
+        -- Instance-wide, not just this stage visit: rejecting one branch of a
+        -- parallel gate must also close the sibling branches and their tasks.
         UPDATE dbo.wf_ApprovalTask SET Status = 'Cancelled'
-        WHERE InstanceStageId = @InstanceStageId AND Status = 'Pending' AND ApprovalTaskId <> @ApprovalTaskId;
+        WHERE WorkflowInstanceId = @WorkflowInstanceId AND Status = 'Pending';
 
         UPDATE dbo.wf_WorkflowInstanceStage SET Status = 'Rejected', ExitedAt = SYSUTCDATETIME() WHERE InstanceStageId = @InstanceStageId;
+        UPDATE dbo.wf_WorkflowInstanceStage SET Status = 'Cancelled', ExitedAt = SYSUTCDATETIME()
+        WHERE WorkflowInstanceId = @WorkflowInstanceId AND Status = 'Active';
         UPDATE dbo.wf_WorkflowInstance SET Status = 'Rejected', CompletedAt = SYSUTCDATETIME() WHERE WorkflowInstanceId = @WorkflowInstanceId;
 
         INSERT INTO dbo.wf_ApprovalAction (WorkflowInstanceId, InstanceStageId, ApprovalTaskId, ActionType, ActorUserId, OldStatus, NewStatus, OldStageId, Comments)
         VALUES (@WorkflowInstanceId, @InstanceStageId, @ApprovalTaskId, 'Reject', @ActorUserId, 'InProgress', 'Rejected', @StageId, @Comments);
+
+        EXEC dbo.wf_EnqueueEvent @WorkflowInstanceId = @WorkflowInstanceId, @EventType = 'InstanceRejected',
+            @ActorUserId = @ActorUserId, @StageId = @StageId, @Comments = @Comments;
     END
     ELSE IF @Action = 'Return'
     BEGIN
-        DECLARE @ResolvedReturnToStageId INT, @ResetApprovalsOnReturn BIT, @RequireComment BIT;
+        DECLARE @ResolvedReturnToStageId INT, @ResetApprovalsOnReturn BIT, @RequireComment BIT, @ResumeMode VARCHAR(20);
 
         IF @ReturnToStageId IS NOT NULL
-            SELECT @ResolvedReturnToStageId = ToStageId, @ResetApprovalsOnReturn = ResetApprovalsOnReturn, @RequireComment = RequireComment
+            SELECT @ResolvedReturnToStageId = ToStageId, @ResetApprovalsOnReturn = ResetApprovalsOnReturn,
+                   @RequireComment = RequireComment, @ResumeMode = ResumeMode
             FROM dbo.wf_ReturnRule WHERE FromStageId = @StageId AND ToStageId = @ReturnToStageId;
         ELSE
-            SELECT TOP 1 @ResolvedReturnToStageId = ToStageId, @ResetApprovalsOnReturn = ResetApprovalsOnReturn, @RequireComment = RequireComment
-            FROM dbo.wf_ReturnRule WHERE FromStageId = @StageId;
+            SELECT TOP 1 @ResolvedReturnToStageId = ToStageId, @ResetApprovalsOnReturn = ResetApprovalsOnReturn,
+                   @RequireComment = RequireComment, @ResumeMode = ResumeMode
+            FROM dbo.wf_ReturnRule WHERE FromStageId = @StageId
+            ORDER BY ReturnRuleId;
 
         IF @ResolvedReturnToStageId IS NULL
         BEGIN
@@ -98,10 +113,30 @@ BEGIN
         UPDATE dbo.wf_ApprovalTask SET Status = 'Returned', CompletedByUserId = @ActorUserId, Comments = @Comments, CompletedAt = SYSUTCDATETIME()
         WHERE ApprovalTaskId = @ApprovalTaskId;
 
+        -- Instance-wide: returning from one branch of a parallel gate also
+        -- closes the sibling branches and the gate itself.
         UPDATE dbo.wf_ApprovalTask SET Status = 'Cancelled'
-        WHERE InstanceStageId = @InstanceStageId AND Status = 'Pending' AND ApprovalTaskId <> @ApprovalTaskId;
+        WHERE WorkflowInstanceId = @WorkflowInstanceId AND Status = 'Pending';
 
         UPDATE dbo.wf_WorkflowInstanceStage SET Status = 'Returned', ExitedAt = SYSUTCDATETIME() WHERE InstanceStageId = @InstanceStageId;
+        UPDATE dbo.wf_WorkflowInstanceStage SET Status = 'Cancelled', ExitedAt = SYSUTCDATETIME()
+        WHERE WorkflowInstanceId = @WorkflowInstanceId AND Status = 'Active';
+
+        -- ReturnToOrigin: remember where to come back to. A return issued from
+        -- a parallel branch resumes at the gate (container), since a lone
+        -- branch cannot be re-entered outside its group.
+        DECLARE @ReturnedFromStageId INT = NULL;
+        IF @ResumeMode = 'ReturnToOrigin'
+        BEGIN
+            DECLARE @OriginParallelGroupId INT;
+            SELECT @OriginParallelGroupId = ParallelGroupId FROM dbo.wf_Stage WHERE StageId = @StageId AND StageType = 'Approval';
+
+            IF @OriginParallelGroupId IS NOT NULL
+                SELECT @ReturnedFromStageId = StageId FROM dbo.wf_Stage
+                WHERE ParallelGroupId = @OriginParallelGroupId AND StageType = 'ParallelGroup';
+            ELSE
+                SET @ReturnedFromStageId = @StageId;
+        END
 
         IF @ResetApprovalsOnReturn = 1
         BEGIN
@@ -123,8 +158,8 @@ BEGIN
         FROM dbo.wf_WorkflowInstanceStage WHERE WorkflowInstanceId = @WorkflowInstanceId AND StageId = @ResolvedReturnToStageId;
 
         DECLARE @ReturnInstanceStageId BIGINT;
-        INSERT INTO dbo.wf_WorkflowInstanceStage (WorkflowInstanceId, StageId, Status, AttemptNumber)
-        VALUES (@WorkflowInstanceId, @ResolvedReturnToStageId, 'Active', @ReturnAttempt);
+        INSERT INTO dbo.wf_WorkflowInstanceStage (WorkflowInstanceId, StageId, Status, AttemptNumber, ReturnedFromStageId)
+        VALUES (@WorkflowInstanceId, @ResolvedReturnToStageId, 'Active', @ReturnAttempt, @ReturnedFromStageId);
         SET @ReturnInstanceStageId = SCOPE_IDENTITY();
 
         -- If the return target has its own approver (e.g. a dedicated
@@ -150,6 +185,9 @@ BEGIN
 
         INSERT INTO dbo.wf_ApprovalAction (WorkflowInstanceId, InstanceStageId, ApprovalTaskId, ActionType, ActorUserId, OldStatus, NewStatus, OldStageId, NewStageId, Comments)
         VALUES (@WorkflowInstanceId, @ReturnInstanceStageId, @ApprovalTaskId, 'Return', @ActorUserId, 'InProgress', @NewInstanceStatus, @StageId, @ResolvedReturnToStageId, @Comments);
+
+        EXEC dbo.wf_EnqueueEvent @WorkflowInstanceId = @WorkflowInstanceId, @EventType = 'InstanceReturned',
+            @ActorUserId = @ActorUserId, @StageId = @ResolvedReturnToStageId, @Comments = @Comments;
     END
     ELSE IF @Action = 'Approve'
     BEGIN
@@ -159,12 +197,24 @@ BEGIN
         INSERT INTO dbo.wf_ApprovalAction (WorkflowInstanceId, InstanceStageId, ApprovalTaskId, ActionType, ActorUserId, OldStatus, NewStatus, OldStageId, Comments)
         VALUES (@WorkflowInstanceId, @InstanceStageId, @ApprovalTaskId, 'Approve', @ActorUserId, 'InProgress', 'Approved', @StageId, @Comments);
 
-        DECLARE @TotalForRule INT, @ApprovedForRule INT;
+        DECLARE @TotalForRule INT, @ApprovedForRule INT, @RequiredForRule INT;
         SELECT @TotalForRule = COUNT(*), @ApprovedForRule = SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END)
         FROM dbo.wf_ApprovalTask WHERE InstanceStageId = @InstanceStageId AND ApprovalRuleId = @ApprovalRuleId AND Status <> 'Cancelled';
 
-        IF @ApprovedForRule >= @TotalForRule
+        -- A Group rule with RequiredCount=N fans out one task per member
+        -- (wf_CreateTasksForStage) and is satisfied by any N of them; N at or
+        -- above the member count means all of them.
+        SELECT @RequiredForRule = CASE
+            WHEN ApproverType = 'Group' AND RequiredCount > 1 AND RequiredCount < @TotalForRule THEN RequiredCount
+            ELSE @TotalForRule END
+        FROM dbo.wf_ApprovalRule WHERE ApprovalRuleId = @ApprovalRuleId;
+
+        IF @ApprovedForRule >= @RequiredForRule
         BEGIN
+            -- Quorum reached: the remaining members' tasks are no longer needed.
+            UPDATE dbo.wf_ApprovalTask SET Status = 'Cancelled'
+            WHERE InstanceStageId = @InstanceStageId AND ApprovalRuleId = @ApprovalRuleId AND Status = 'Pending';
+
             DECLARE @TotalRulesForStage INT, @SatisfiedRulesForStage INT;
             SELECT @TotalRulesForStage = COUNT(*) FROM dbo.wf_ApprovalRule WHERE StageId = @StageId;
 
@@ -204,6 +254,7 @@ BEGIN
                 BEGIN
                     SET @NeedsRouting = 1;
                     SET @RoutingFromStageId = @StageId;
+                    SELECT @ResumeToStageId = ReturnedFromStageId FROM dbo.wf_WorkflowInstanceStage WHERE InstanceStageId = @InstanceStageId;
                 END
             END
         END

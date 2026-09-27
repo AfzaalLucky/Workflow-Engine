@@ -30,10 +30,11 @@ public class ApprovalTaskService(
         var status = await runtimeRepository.GetWorkflowInstanceStatusAsync(result.WorkflowInstanceId)
             ?? throw new InvalidOperationException("Workflow instance not found after acting on task.");
 
-        var nextStageId = await routingService.ResolveNextStageAsync(
-            result.RoutingFromStageId.Value, status.Instance.ContextDataJson);
-
-        await runtimeRepository.AdvanceToStageAsync(result.WorkflowInstanceId, nextStageId, actorUserId);
+        // The task action itself has committed either way; a routing failure
+        // leaves the instance Errored and is reported back, not thrown.
+        result.RoutingError = await routingService.RouteAndAdvanceAsync(
+            result.WorkflowInstanceId, result.RoutingFromStageId.Value, result.ResumeToStageId,
+            status.Instance.ContextDataJson, actorUserId);
 
         return result;
     }

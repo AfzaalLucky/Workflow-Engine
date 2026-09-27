@@ -23,7 +23,7 @@ public class WorkflowDefinitionService(IWorkflowMetadataRepository metadataRepos
 
     public Task<int> UpsertStageAsync(int workflowVersionId, UpsertStageRequest request, Guid actorUserId) =>
         metadataRepository.UpsertStageAsync(workflowVersionId, request.StageKey, request.Name, request.StageOrder,
-            request.StageType, request.ParallelGroupId, request.IsInitial, request.IsFinal, actorUserId);
+            request.StageType, request.ParallelGroupId, request.IsInitial, request.IsFinal, request.ExternalStatusCode, actorUserId);
 
     public Task<int> UpsertTransitionAsync(int workflowVersionId, UpsertTransitionRequest request, Guid actorUserId) =>
         metadataRepository.UpsertTransitionAsync(request.TransitionId, workflowVersionId, request.FromStageId,
@@ -46,5 +46,5 @@ public class WorkflowDefinitionService(IWorkflowMetadataRepository metadataRepos
 
     public Task<int> UpsertReturnRuleAsync(UpsertReturnRuleRequest request, Guid actorUserId) =>
         metadataRepository.UpsertReturnRuleAsync(request.ReturnRuleId, request.FromStageId, request.ToStageId,
-            request.ResetApprovalsOnReturn, request.RequireComment, actorUserId);
+            request.ResetApprovalsOnReturn, request.RequireComment, request.ResumeMode, actorUserId);
 }

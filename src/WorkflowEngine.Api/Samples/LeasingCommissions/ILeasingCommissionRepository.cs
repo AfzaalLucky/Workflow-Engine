@@ -6,4 +6,5 @@ public interface ILeasingCommissionRepository
     Task SetWorkflowInstanceAsync(int leasingCommissionId, Guid workflowInstanceId);
     Task<LeasingCommission?> GetAsync(int leasingCommissionId);
     Task<IReadOnlyList<LeasingCommission>> GetMineAsync(Guid requestedByUserId);
+    Task SetStatusCodeAsync(int leasingCommissionId, string statusCode);
 }

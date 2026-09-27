@@ -4,7 +4,8 @@ public record UpsertWorkflowDefinitionRequest(string Code, string Name, string? 
 
 public record UpsertStageRequest(
     string StageKey, string Name, int StageOrder, string StageType,
-    int? ParallelGroupId, bool IsInitial = false, bool IsFinal = false);
+    int? ParallelGroupId, bool IsInitial = false, bool IsFinal = false,
+    string? ExternalStatusCode = null); // host app's own status for this stage, carried on lifecycle events
 
 public record UpsertTransitionRequest(
     int? TransitionId, int FromStageId, int ToStageId,
@@ -24,4 +25,5 @@ public record UpsertApprovalRuleRequest(
 
 public record UpsertReturnRuleRequest(
     int? ReturnRuleId, int FromStageId, int ToStageId,
-    bool ResetApprovalsOnReturn = true, bool RequireComment = true);
+    bool ResetApprovalsOnReturn = true, bool RequireComment = true,
+    string ResumeMode = "Forward"); // Forward | ReturnToOrigin

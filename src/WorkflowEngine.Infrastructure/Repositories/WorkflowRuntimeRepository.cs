@@ -64,6 +64,7 @@ public class WorkflowRuntimeRepository(ISqlConnectionFactory connectionFactory) 
         parameters.Add("WorkflowInstanceId", dbType: DbType.Guid, direction: ParameterDirection.Output);
         parameters.Add("NeedsRouting", dbType: DbType.Boolean, direction: ParameterDirection.Output);
         parameters.Add("RoutingFromStageId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+        parameters.Add("ResumeToStageId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
         await connection.ExecuteAsync("dbo.wf_ActOnTask", parameters, commandType: CommandType.StoredProcedure);
 
@@ -72,6 +73,7 @@ public class WorkflowRuntimeRepository(ISqlConnectionFactory connectionFactory) 
             WorkflowInstanceId = parameters.Get<Guid>("WorkflowInstanceId"),
             NeedsRouting = parameters.Get<bool>("NeedsRouting"),
             RoutingFromStageId = parameters.Get<int?>("RoutingFromStageId"),
+            ResumeToStageId = parameters.Get<int?>("ResumeToStageId"),
         };
     }
 
@@ -85,6 +87,7 @@ public class WorkflowRuntimeRepository(ISqlConnectionFactory connectionFactory) 
         parameters.Add("UpdatedContextDataJson", updatedContextDataJson);
         parameters.Add("CurrentStageId", dbType: DbType.Int32, direction: ParameterDirection.Output);
         parameters.Add("NeedsRouting", dbType: DbType.Boolean, direction: ParameterDirection.Output);
+        parameters.Add("ResumeToStageId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
         await connection.ExecuteAsync("dbo.wf_ResumeWorkflowInstance", parameters, commandType: CommandType.StoredProcedure);
 
@@ -92,6 +95,7 @@ public class WorkflowRuntimeRepository(ISqlConnectionFactory connectionFactory) 
         {
             CurrentStageId = parameters.Get<int>("CurrentStageId"),
             NeedsRouting = parameters.Get<bool>("NeedsRouting"),
+            ResumeToStageId = parameters.Get<int?>("ResumeToStageId"),
         };
     }
 
@@ -139,5 +143,33 @@ public class WorkflowRuntimeRepository(ISqlConnectionFactory connectionFactory) 
         var result = await connection.QueryAsync<ApprovalActionEntry>(
             "dbo.wf_GetWorkflowInstanceHistory", new { WorkflowInstanceId = workflowInstanceId }, commandType: CommandType.StoredProcedure);
         return result.ToList();
+    }
+
+    public async Task<IReadOnlyList<WorkflowInstance>> GetWorkflowInstancesAsync(
+        string? businessEntityType, string? businessEntityId, string? workflowDefinitionCode,
+        Guid? startedByUserId, string? status, int top)
+    {
+        using var connection = connectionFactory.CreateOpenConnection();
+        var result = await connection.QueryAsync<WorkflowInstance>("dbo.wf_GetWorkflowInstances", new
+        {
+            BusinessEntityType = businessEntityType,
+            BusinessEntityId = businessEntityId,
+            WorkflowDefinitionCode = workflowDefinitionCode,
+            StartedByUserId = startedByUserId,
+            Status = status,
+            Top = top
+        }, commandType: CommandType.StoredProcedure);
+        return result.ToList();
+    }
+
+    public async Task MarkInstanceErroredAsync(Guid workflowInstanceId, Guid actorUserId, string errorMessage)
+    {
+        using var connection = connectionFactory.CreateOpenConnection();
+        await connection.ExecuteAsync("dbo.wf_MarkInstanceErrored", new
+        {
+            WorkflowInstanceId = workflowInstanceId,
+            ActorUserId = actorUserId,
+            ErrorMessage = errorMessage.Length > 1000 ? errorMessage[..1000] : errorMessage
+        }, commandType: CommandType.StoredProcedure);
     }
 }

@@ -13,6 +13,7 @@ public class LeasingCommission
     public decimal CommissionAmount { get; set; }
     public string Branch { get; set; } = "";
     public string? Notes { get; set; }
+    public string? StatusCode { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? WorkflowStatus { get; set; }
     public string? CurrentStageName { get; set; }

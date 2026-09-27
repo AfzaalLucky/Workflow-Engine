@@ -26,4 +26,10 @@ public interface IWorkflowRuntimeRepository
     Task<InstanceStatusResult?> GetWorkflowInstanceStatusAsync(Guid workflowInstanceId);
 
     Task<IReadOnlyList<ApprovalActionEntry>> GetWorkflowInstanceHistoryAsync(Guid workflowInstanceId);
+
+    Task<IReadOnlyList<WorkflowInstance>> GetWorkflowInstancesAsync(
+        string? businessEntityType, string? businessEntityId, string? workflowDefinitionCode,
+        Guid? startedByUserId, string? status, int top);
+
+    Task MarkInstanceErroredAsync(Guid workflowInstanceId, Guid actorUserId, string errorMessage);
 }

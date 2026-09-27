@@ -12,7 +12,7 @@ public interface IWorkflowMetadataRepository
     Task PublishWorkflowVersionAsync(int workflowVersionId, Guid actorUserId);
 
     Task<int> UpsertStageAsync(int workflowVersionId, string stageKey, string name, int stageOrder,
-        string stageType, int? parallelGroupId, bool isInitial, bool isFinal, Guid actorUserId);
+        string stageType, int? parallelGroupId, bool isInitial, bool isFinal, string? externalStatusCode, Guid actorUserId);
 
     Task<int> UpsertTransitionAsync(int? transitionId, int workflowVersionId, int fromStageId, int toStageId,
         string? conditionExpression, int priority, bool isDefault, Guid actorUserId);
@@ -29,7 +29,7 @@ public interface IWorkflowMetadataRepository
         string? approverRoleCode, int? approvalGroupId, int requiredCount, Guid actorUserId);
 
     Task<int> UpsertReturnRuleAsync(int? returnRuleId, int fromStageId, int toStageId,
-        bool resetApprovalsOnReturn, bool requireComment, Guid actorUserId);
+        bool resetApprovalsOnReturn, bool requireComment, string resumeMode, Guid actorUserId);
 
     Task UpsertUserRefAsync(Guid userId, string displayName, string? email);
 }

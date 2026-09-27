@@ -4,6 +4,7 @@ CREATE OR ALTER PROCEDURE dbo.wf_UpsertReturnRule
     @ToStageId              INT,
     @ResetApprovalsOnReturn BIT = 1,
     @RequireComment         BIT = 1,
+    @ResumeMode             VARCHAR(20) = 'Forward', -- Forward | ReturnToOrigin
     @ActorUserId            UNIQUEIDENTIFIER,
     @ResultReturnRuleId     INT OUTPUT
 AS
@@ -14,14 +15,15 @@ BEGIN
     BEGIN
         UPDATE dbo.wf_ReturnRule
         SET FromStageId = @FromStageId, ToStageId = @ToStageId,
-            ResetApprovalsOnReturn = @ResetApprovalsOnReturn, RequireComment = @RequireComment
+            ResetApprovalsOnReturn = @ResetApprovalsOnReturn, RequireComment = @RequireComment,
+            ResumeMode = @ResumeMode
         WHERE ReturnRuleId = @ReturnRuleId;
         SET @ResultReturnRuleId = @ReturnRuleId;
     END
     ELSE
     BEGIN
-        INSERT INTO dbo.wf_ReturnRule (FromStageId, ToStageId, ResetApprovalsOnReturn, RequireComment)
-        VALUES (@FromStageId, @ToStageId, @ResetApprovalsOnReturn, @RequireComment);
+        INSERT INTO dbo.wf_ReturnRule (FromStageId, ToStageId, ResetApprovalsOnReturn, RequireComment, ResumeMode)
+        VALUES (@FromStageId, @ToStageId, @ResetApprovalsOnReturn, @RequireComment, @ResumeMode);
         SET @ResultReturnRuleId = SCOPE_IDENTITY();
     END
 

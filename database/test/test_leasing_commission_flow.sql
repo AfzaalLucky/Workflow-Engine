@@ -17,6 +17,7 @@ DECLARE @LeasingRoles dbo.wf_RoleCodeList; INSERT INTO @LeasingRoles VALUES ('Le
 DECLARE @FinanceRoles dbo.wf_RoleCodeList; INSERT INTO @FinanceRoles VALUES ('LeasingFinanceApprover');
 DECLARE @CCRoles dbo.wf_RoleCodeList; INSERT INTO @CCRoles VALUES ('LeasingCCApprover');
 DECLARE @AuditorRoles dbo.wf_RoleCodeList; INSERT INTO @AuditorRoles VALUES ('LeasingAuditor');
+DECLARE @ClearanceRoles dbo.wf_RoleCodeList; INSERT INTO @ClearanceRoles VALUES ('LeasingFinanceClearanceApprover');
 
 PRINT '=== Leasing Commission: Audit return-to-exact-origin ===';
 
@@ -100,7 +101,7 @@ EXEC dbo.wf_AdvanceToStage @WorkflowInstanceId = @InstanceId, @ToStageId = @ToSt
 PRINT 'Audit approved -> Finance Clearance';
 
 SELECT TOP 1 @TaskId = ApprovalTaskId FROM dbo.wf_ApprovalTask WHERE WorkflowInstanceId = @InstanceId AND Status = 'Pending';
-EXEC dbo.wf_ActOnTask @ApprovalTaskId = @TaskId, @ActorUserId = @FinanceUser, @ActorRoleCodes = @FinanceRoles,
+EXEC dbo.wf_ActOnTask @ApprovalTaskId = @TaskId, @ActorUserId = @FinanceUser, @ActorRoleCodes = @ClearanceRoles,
     @Action = 'Approve', @Comments = 'Cleared',
     @WorkflowInstanceId = @WiId OUTPUT, @NeedsRouting = @NeedsRouting OUTPUT, @RoutingFromStageId = @RoutingFromStageId OUTPUT;
 SELECT TOP 1 @ToStageId = ToStageId FROM dbo.wf_Transition WHERE FromStageId = @RoutingFromStageId AND IsDefault = 1;
